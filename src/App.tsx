@@ -8,14 +8,18 @@ import { TongQuan } from './TongQuan'
 import { TheoNam } from './TheoNam'
 import { TaiLen } from './TaiLen'
 import { CacKy } from './CacKy'
+import { ChoPhepAi, QuanLyKetNoi } from './KetNoiAi'
 
-type Tab = 'ky' | 'nam' | 'tai' | 'ds'
+type Tab = 'ky' | 'nam' | 'tai' | 'ds' | 'ai'
 const QUA_CONG = location.pathname.startsWith('/the-visa/')
+/** Máy chủ MCP chuyển sang đây khi một ứng dụng AI xin quyền */
+const YEU_CAU_AI = new URLSearchParams(location.search).get('ket-noi-ai')
+const layVe = () => auth.currentUser!.getIdToken()
 
 export function App() {
   const [user, setUser] = useState<User | null | undefined>(CHE_DO_THU ? null : undefined)
   useEffect(() => (CHE_DO_THU ? undefined : theoDoi(setUser)), [])
-  const kho: Kho | null = useMemo(() => (CHE_DO_THU ? khoThu() : user ? khoMayChu(() => auth.currentUser!.getIdToken()) : null), [user])
+  const kho: Kho | null = useMemo(() => (CHE_DO_THU ? khoThu() : user ? khoMayChu(layVe) : null), [user])
 
   const [ky, setKy] = useState<Ky[] | null>(null)
   const [loi, setLoi] = useState('')
@@ -41,13 +45,15 @@ export function App() {
       <div className="giua">
         <div>
           <h1>Chi tiêu thẻ tín dụng</h1>
-          <p className="sub">Đăng nhập bằng tài khoản Google được phép để xem.</p>
+          <p className="sub">{YEU_CAU_AI ? 'Một ứng dụng AI đang xin quyền xem chi tiêu. Đăng nhập trước để quyết định.' : 'Đăng nhập bằng tài khoản Google được phép để xem.'}</p>
           <button className="nut" onClick={() => dangNhap().catch((e) => setLoi(e.message))}>Đăng nhập Google</button>
           {loi && <div className="loi">{loi}</div>}
           <footer>(C) August87 - 0982722036</footer>
         </div>
       </div>
     )
+
+  if (YEU_CAU_AI && user) return <ChoPhepAi yeuCau={YEU_CAU_AI} layVe={layVe} email={user.email ?? ''} />
 
   return (
     <div className="wrap">
@@ -63,7 +69,7 @@ export function App() {
         </div>
       </div>
       <div className="tabs">
-        {([['ky', 'Theo kỳ'], ['nam', 'Theo năm'], ['tai', 'Tải sao kê'], ['ds', 'Các kỳ đã lưu']] as [Tab, string][]).map(([t, ten]) => (
+        {([['ky', 'Theo kỳ'], ['nam', 'Theo năm'], ['tai', 'Tải sao kê'], ['ds', 'Các kỳ đã lưu'], ['ai', 'Kết nối AI']] as [Tab, string][]).map(([t, ten]) => (
           <button key={t} className={tab === t ? 'on' : ''} onClick={() => setTab(t)}>{ten}</button>
         ))}
       </div>
@@ -86,6 +92,7 @@ export function App() {
           )}
         </>
       )}
+      {tab === 'ai' && <QuanLyKetNoi layVe={CHE_DO_THU ? null : layVe} />}
       <footer>(C) August87 - 0982722036</footer>
     </div>
   )
