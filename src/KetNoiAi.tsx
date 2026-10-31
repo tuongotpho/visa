@@ -2,7 +2,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { ngayVN } from '../shared/thongKe'
 
-export const DIA_CHI_MCP = 'https://the-visa-lethanh.vercel.app/mcp'
+// Máy chủ AI ở cùng tên miền với app: dưới cổng chung …/the-visa/ (Firebase app-by-lethanh.web.app) hay chạy riêng
+export const DIA_CHI_MCP = location.pathname.startsWith('/the-visa/') ? `${location.origin}/the-visa/mcp` : `${location.origin}/mcp`
 type LayVe = () => Promise<string>
 
 interface Phien { id: string; email: string; tenMay: string; ungDung: string; noiNhan: string; taoLuc: string }

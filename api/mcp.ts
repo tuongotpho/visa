@@ -20,7 +20,7 @@ import { taoMayChu, type NguonMcp } from './_lib/mayChuMcp.js'
 
 process.env.TZ = 'Asia/Ho_Chi_Minh'
 const GIO = 3600 * 1000
-const WEB_MAC_DINH = 'https://app-by-lethanh.vercel.app/the-visa/'
+const WEB_MAC_DINH = 'https://app-by-lethanh.web.app/the-visa/'
 
 type Env = Record<string, string | undefined>
 interface VeTruyCap extends Ve { e: string; p: string; tm: string }
@@ -161,6 +161,9 @@ export function taoXuLy(env: Env = process.env, k: KhoMcp = kho, kiemDangNhap: (
 
     // ---------- Gọi công cụ ----------
     async function mcp(r: Request) {
+      // Không mở luồng chờ tin (GET → SSE): nó giữ hàm chạy tới hết giờ, mỗi máy AI đang mở là một hàm chạy suốt
+      // (làm cạn hạn mức bộ nhớ Vercel 10/2026). Máy chủ này không gửi tin chủ động nên trả 405 — đúng chuẩn MCP.
+      if (r.method === 'GET') return new Response(null, { status: 405, headers: { Allow: 'POST, DELETE' } })
       const chuaVao = (moTa: string) => jsonRes({ error: 'invalid_token', error_description: moTa }, 401, {
         'WWW-Authenticate': `Bearer error="invalid_token", resource_metadata="${goc}/.well-known/oauth-protected-resource"`,
       })
